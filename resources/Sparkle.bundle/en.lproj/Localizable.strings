@@ -2482,3 +2482,9 @@
 "VC_BTN_SKIP" = "Skip";
 "VC_PLACEHOLDER_AUTO" = "Auto";
 "VC_PLACEHOLDER_FOLDER_NAME" = "Folder name";
+"SIGNING_EXPIRY_EXPIRED_VALUE" = "Expired";
+"SIGNING_EXPIRY_HELP" = "When the signing from your sideloading tool runs out. After that iOS won't open Instagram until you install the IPA again. Free Apple IDs sign for 7 days.";
+"SIGNING_EXPIRY_TIME_LEFT_VALUE" = "%@ left";
+"SIGNING_EXPIRY_TITLE" = "App expires";
+"SIGNING_EXPIRY_TOAST_SUBTITLE" = "Reinstall the IPA before %@";
+"SIGNING_EXPIRY_TOAST_TITLE" = "App signing: %@";

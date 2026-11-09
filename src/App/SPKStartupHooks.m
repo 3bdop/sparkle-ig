@@ -2,6 +2,7 @@
 
 #import "../Utils.h"
 #import "../Shared/i18n/SPKLanguagePackUpdater.h"
+#import "../Shared/Sideload/SPKSigningExpiry.h"
 #import "../Shared/Updates/SPKUpdateChecker.h"
 #import "SPKHookBisect.h"
 #import "SPKStabilityGuard.h"
@@ -362,6 +363,8 @@ void SPKInstallGeneralUIHooksIfNeeded(void) {
     [SPKLanguagePackUpdater checkForUpdatesIfDue];
     // Not a hook either: offers a newer Sparkle once launch settles, refreshing the feed when due.
     [SPKUpdateChecker scheduleLaunchCheck];
+    // Not a hook: on sideloaded installs, says how long until the signing expires, once a day.
+    SPKSigningExpiryScheduleLaunchNotice();
     SPK_INSTALL(SPKInstallAccountSwitchHooksIfNeeded);
     SPK_INSTALL(SPKInstallTweakGeneralUIHooksIfNeeded);
     // Not a hook: shows the floating debug button from Tools > Diagnostics.

@@ -117,6 +117,7 @@ SPK_NOTIF_CONST(kSPKNotificationCopyGIFLink, "copy_gif_link");
 SPK_NOTIF_CONST(kSPKNotificationCopyGIFTitle, "copy_gif_title");
 SPK_NOTIF_CONST(kSPKNotificationMediaEncodingLogs, "media_encoding_logs");
 SPK_NOTIF_CONST(kSPKNotificationFlexUnavailable, "flex_unavailable");
+SPK_NOTIF_CONST(kSPKNotificationSigningExpiry, "signing_expiry");
 #undef SPK_NOTIF_CONST
 
 NSString *const kSPKNotificationPillDurationKey = @"notifs_pill_duration";
@@ -298,6 +299,7 @@ NSDictionary<NSString *, NSArray<NSString *> *> *SPKNotificationGroupMembership(
                 kSPKNotificationFakeLocation,
                 kSPKNotificationMediaEncodingLogs,
                 kSPKNotificationFlexUnavailable,
+                kSPKNotificationSigningExpiry,
                 kSPKNotificationPasscodeChanged,
             ],
             @"activity" : @[
