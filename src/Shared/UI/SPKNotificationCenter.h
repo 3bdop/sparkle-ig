@@ -90,6 +90,7 @@ FOUNDATION_EXPORT NSString *const kSPKNotificationCopyGIFLink;
 FOUNDATION_EXPORT NSString *const kSPKNotificationCopyGIFTitle;
 FOUNDATION_EXPORT NSString *const kSPKNotificationMediaEncodingLogs;
 FOUNDATION_EXPORT NSString *const kSPKNotificationFlexUnavailable;
+FOUNDATION_EXPORT NSString *const kSPKNotificationSigningExpiry;
 FOUNDATION_EXPORT NSString *const kSPKNotificationPillDurationKey;
 FOUNDATION_EXPORT NSString *const kSPKNotificationPillGlowEnabledKey;
 FOUNDATION_EXPORT NSString *const kSPKNotificationPillLiquidGlassEnabledKey;

@@ -1,6 +1,9 @@
 #import "SPKStrings.h"
 #import "TweakSettings.h"
 
+#import "../Shared/Sideload/SPKSigningExpiry.h"
+#import "SPKTopicSettingsSupport.h"
+
 #import "Topics/SPKAboutSettingsProvider.h"
 #import "Topics/SPKDataSettingsProvider.h"
 #import "Topics/SPKDownloadsSettingsProvider.h"
@@ -18,8 +21,25 @@
 
 @implementation SPKTweakSettings
 
+/// Sideloaded installs only: how long until the signing expires and the IPA has to be reinstalled.
+static NSArray *SPKSigningExpirySections(void) {
+    NSString *remaining = SPKSigningExpiryRemainingText();
+    if (!remaining)
+        return @[];
+    NSString *subtitle = [NSString stringWithFormat:@"%@ · %@", remaining, SPKSigningExpiryDateText()]; // SPK_I18N_IGNORE: separator
+    return @[ @{
+        @"header" : @"",
+        @"rows" : @[
+            SPKSettingWithHelp([SPKSetting staticCellWithTitle:SPKL(@"SIGNING_EXPIRY_TITLE")
+                                                      subtitle:subtitle
+                                                          icon:SPKSettingsIcon(@"history")],
+                               SPKL(@"SIGNING_EXPIRY_HELP"))
+        ]
+    } ];
+}
+
 + (NSArray *)sections {
-    return @[
+    return [SPKSigningExpirySections() arrayByAddingObjectsFromArray:@[
         @{
             @"header" : @"",
             @"rows" : @[
@@ -54,7 +74,7 @@
                 [SPKAboutSettingsProvider rootSetting]
             ]
         }
-    ];
+    ]];
 }
 
 + (NSString *)title {
