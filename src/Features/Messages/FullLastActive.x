@@ -134,29 +134,70 @@ static NSAttributedString *SPKFormattedPresenceAttributedString(NSAttributedStri
     return replacement;
 }
 
+// IG's own relative string ("Active 14h ago") from before the rewrite, kept per title view
+// so labels that still show it can be found after the model already carries ours.
+static const void *kSPKLastActiveOriginalTextKey = &kSPKLastActiveOriginalTextKey;
+
+// Logs each distinct state once, so layout passes don't flood the log. Read with
+// `pymobiledevice3 syslog live` and look for "[Sparkle LastActive]".
+static void SPKLastActiveTrace(NSString *message) {
+    static NSString *lastMessage;
+    if ([message isEqualToString:lastMessage])
+        return;
+    lastMessage = [message copy];
+    SPKLog(@"LastActive", @"%@", message);
+}
+
+static void SPKCollectViews(UIView *view, NSMutableArray<UILabel *> *labels, NSMutableArray<NSString *> *leafClasses) {
+    if ([view isKindOfClass:[UILabel class]])
+        [labels addObject:(UILabel *)view];
+    else if (view.subviews.count == 0)
+        [leafClasses addObject:NSStringFromClass([view class])];
+    for (UIView *subview in view.subviews)
+        SPKCollectViews(subview, labels, leafClasses);
+}
+
 static void SPKRewriteLastActiveSubtitle(IGDirectLeftAlignedTitleView *titleView) {
     if (!SPKLastActiveEnabled())
         return;
-    if (![titleView respondsToSelector:@selector(_currentSubtitleViewModel)])
+    if (![titleView respondsToSelector:@selector(_currentSubtitleViewModel)]) {
+        SPKLastActiveTrace(@"title view has no _currentSubtitleViewModel");
         return;
+    }
 
     id subtitle = [titleView _currentSubtitleViewModel];
-    if (!subtitle)
-        return;
-
     NSDate *date = SPKLastActiveDateForTitleView(titleView);
-    if (!date)
+    NSMutableArray<UILabel *> *labels = [NSMutableArray array];
+    NSMutableArray<NSString *> *leafClasses = [NSMutableArray array];
+    SPKCollectViews(titleView, labels, leafClasses);
+    NSMutableArray<NSString *> *labelDescriptions = [NSMutableArray array];
+    for (UILabel *label in labels)
+        [labelDescriptions addObject:[NSString stringWithFormat:@"%@ '%@'", NSStringFromClass([label class]), label.text ?: @""]];
+    SPKLastActiveTrace([NSString stringWithFormat:@"subtitle=%@ date=%@ labels=[%@] other=[%@]",
+                                                  subtitle ? NSStringFromClass([subtitle class]) : @"nil",
+                                                  date ?: @"nil",
+                                                  [labelDescriptions componentsJoinedByString:@", "],
+                                                  [leafClasses componentsJoinedByString:@", "]]);
+    if (!subtitle || !date)
         return;
 
     @try {
         id current = [subtitle valueForKey:@"text"];
-        if (![current isKindOfClass:[NSAttributedString class]])
+        if (![current isKindOfClass:[NSAttributedString class]]) {
+            SPKLastActiveTrace([NSString stringWithFormat:@"subtitle text is %@", current ? NSStringFromClass([current class]) : @"nil"]);
             return;
+        }
         NSAttributedString *replacement = SPKFormattedPresenceAttributedString(current, date);
-        if (!replacement)
-            return;
-
-        [subtitle setValue:replacement forKey:@"text"];
+        if (replacement) {
+            objc_setAssociatedObject(titleView, kSPKLastActiveOriginalTextKey, [current string], OBJC_ASSOCIATION_COPY_NONATOMIC);
+            [subtitle setValue:replacement forKey:@"text"];
+        } else {
+            // nil both inside the "Active now" window and once the model already carries our
+            // text; only the latter can still have labels left to catch up.
+            if (![[current string] isEqualToString:SPKFormattedLastActive(date)])
+                return;
+            replacement = current;
+        }
 
         // IG reads the subtitle text once before our overwrite lands, so mirror
         // it straight onto the label too.
@@ -166,7 +207,20 @@ static void SPKRewriteLastActiveSubtitle(IGDirectLeftAlignedTitleView *titleView
             if ([label isKindOfClass:[UILabel class]])
                 label.attributedText = replacement;
         }
-    } @catch (__unused NSException *e) {
+
+        // IG 454 can draw the subtitle in subtitle views of its own rather than _subtitleLabel,
+        // so replace IG's string wherever a label in the header still shows it.
+        NSString *original = objc_getAssociatedObject(titleView, kSPKLastActiveOriginalTextKey);
+        NSUInteger replaced = 0;
+        for (UILabel *label in labels) {
+            if (original.length > 0 && [label.text isEqualToString:original]) {
+                label.attributedText = replacement;
+                replaced++;
+            }
+        }
+        SPKLastActiveTrace([NSString stringWithFormat:@"rewrote '%@' -> '%@', %lu other label(s)", original ?: @"", [replacement string], (unsigned long)replaced]);
+    } @catch (NSException *e) {
+        SPKLastActiveTrace([NSString stringWithFormat:@"exception: %@", e.reason]);
     }
 }
 
