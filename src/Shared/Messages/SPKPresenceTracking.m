@@ -1500,21 +1500,15 @@ void SPKPresencePresentChatRuleToggle(SPKDirectThreadContext *context) {
     NSString *username = SPKAutoSaveFilterNormalizedUsername(rawUsername);
     if (username.length == 0)
         return;
-    NSString *encodedUsername = [username stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLQueryAllowedCharacterSet];
-    if (encodedUsername.length == 0)
-        return;
 
+    // The shared resolver, like every other add-user prompt: IG's cached users first, then
+    // username_info and search, with web_profile_info only as the last resort.
     __weak typeof(self) weakSelf = self;
-    [SPKInstagramAPI sendRequestWithMethod:@"GET"
-                                      path:[NSString stringWithFormat:@"users/web_profile_info/?username=%@", encodedUsername]
-                                      body:nil
-                                completion:^(NSDictionary *response, NSError *error) {
+    [SPKInstagramAPI resolveUserForUsername:username
+                                completion:^(NSDictionary *user, NSError *error) {
                                     __strong typeof(weakSelf) strongSelf = weakSelf;
                                     if (!strongSelf)
                                         return;
-                                    NSDictionary *user = response[@"data"][@"user"];
-                                    if (![user isKindOfClass:NSDictionary.class])
-                                        user = response[@"user"];
                                     if (![user isKindOfClass:NSDictionary.class] || error) {
                                         [strongSelf presentError:[NSString stringWithFormat:SPKL(@"INSTANTS_INSTANTS_AUTO_SAVE_USER_VALUE_NOT_FOUND_FORMAT"), username]];
                                         return;
