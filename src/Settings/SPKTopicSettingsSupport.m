@@ -314,8 +314,10 @@ UIMenu *SPKHiddenChatsRevealResetMenu(void) {
 UIMenu *SPKLastActiveFormatMenu(void) {
     return [UIMenu menuWithChildren:@[
         SPKMenuCommand(SPKL(@"MENU_OFF"), nil, nil, @"msgs_last_active_format", @"off", NO),
-        SPKMenuCommand(SPKL(@"MENU_SMART"), nil, nil, @"msgs_last_active_format", @"smart", NO),
-        SPKMenuCommand(SPKL(@"MENU_DATE_TIME"), nil, nil, @"msgs_last_active_format", @"datetime", NO)
+        // The header hooks are only installed at launch while the format is on, so turning it
+        // on needs a restart; switching between formats or off again applies live.
+        SPKMenuCommand(SPKL(@"MENU_SMART"), nil, nil, @"msgs_last_active_format", @"smart", YES),
+        SPKMenuCommand(SPKL(@"MENU_DATE_TIME"), nil, nil, @"msgs_last_active_format", @"datetime", YES)
     ]];
 }
 
